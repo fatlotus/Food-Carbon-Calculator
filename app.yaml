@@ -1,4 +1,8 @@
-application: -
+application: (none)
 runtime: python
 version: dev
 api_version: 1
+
+handlers:
+- url: /
+  static_dir: assets
