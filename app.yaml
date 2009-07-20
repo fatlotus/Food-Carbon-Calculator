@@ -1,11 +1,11 @@
-application: (none)
+application: food-calculator
 runtime: python
 version: dev
 api_version: 1
 
 handlers:
 - url: /
+  upload: assets/index.html
   static_files: assets/index.html
-  
 - url: /.*
   static_dir: assets
