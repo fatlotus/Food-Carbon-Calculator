@@ -1,1 +1,140 @@
-(empty)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<title>Hello, world!</title>
+	 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAQsUZ5a1TmbwXu-6iZJw5eBTawy-_zi6IATyVHeDCFyIeOznPYhRUdnQMegXsgtEA47IlY0J7UP9Agw" type="text/javascript"></script>
+	 <style type="text/css" media="screen">
+p{font:2em Georgia,serif;text-align:center;width:50%;margin:0 auto;margin-top:5em;}
+p span{font-weight:bold;}
+p input{font-family:inherit;font-size:80%;font-weight:normal;width:10em;}
+	 </style>
+	 
+	 <script type="text/javascript" charset="utf-8">
+var recalc;
+
+var _find_ = function (id, parent, callback) {
+	parent = parent || document.getElementsByTagName("body")[0];
+	
+	var elements = parent.childNodes;
+	
+	for (var i = 0; i < elements.length; ++i) {
+		element = elements[i];
+		
+		if (element.nodeType != 1) continue;
+		
+		if (element.getAttribute("class") == id) {
+			callback();
+		} else {
+			if (element.hasChildNodes()) {
+				_find_(id, element, callback);
+			}
+		}
+	}
+}
+
+var get = function(id, parent) {
+	var out = undefined;
+	
+	_find_(id, parent, function () {
+		switch (element.nodeName.toLowerCase()) {
+		case "input":
+			out = element.value;
+			break;
+		default:
+			out = element.firstChild.nodeValue;
+		}
+	});
+	
+	return out;
+}
+
+var set = function(id, value, parent) {
+	_find_(id, parent, function () {
+		switch (element.nodeName.toLowerCase()) {
+		case "input":
+			element.value = value;
+			element.onblur = recalc;
+			element.onchange = recalc;
+			break;
+		default:
+			while (element.hasChildNodes()) element.removeChild(element.firstChild);
+			
+			element.appendChild(document.createTextNode(value));
+		}
+	});
+}
+
+var from = null;
+var to = null;
+var oldFrom = "5734 S. Kimbark, Chicago, IL";
+var oldTo = "New York City";
+
+recalc = function () {
+	var oldFrom = from;
+	var oldTo = to;
+	var from = get("from");
+	var to = get("to");
+	
+	if (from == oldFrom && to == oldTo) return;
+	
+	console.debug("recalculating...");
+	
+	var directions = new GDirections()
+	GEvent.addListener(directions, "load", function () {
+		var unit = "m";
+		var num = meters = this.getDistance().meters;
+		
+		if(num > 1000) {
+			num = parseInt(num / 1000);
+			unit = "km";
+		}
+		
+		var distance = num + unit;
+		
+		var carbon = meters / 8800 * 2.77;
+		var oxygen = carbon / 12 * 16;
+		var co2 = carbon + 2*oxygen;
+		
+		var unit = "kg";
+		if (co2 > 1000) {
+			co2 /= 1000;
+			co2 = parseInt(co2 * 100) / 100;
+			
+			unit = "t";
+		}
+		
+		var mileage = co2 + unit;
+		
+		set("distance", distance);
+		set("co2", mileage);
+	});
+	
+	GEvent.addListener(directions, "error", function () {
+		var status = directions.getStatus().code;
+		
+		set("distance", "too far for me to walk (#"+status+")");
+		set("co2", "a lot");
+	});
+	
+	console.info("from: "+from+" to: "+to);
+	
+	directions.load("from: "+from+" to: "+to);
+}
+
+window.onload = function () {
+	set("from", oldFrom);
+	set("to", oldTo);
+	recalc();
+	oldFrom = from;
+	oldTo = to;
+}
+
+
+	 </script>
+</head>
+<body>	
+	<p>The distance from <input class="from" type="text"/> to <input class="to" type="text"/> is <span class="distance"></span>, thereby releasing <span class="co2"></span> of CO<sup>2</span></p>
+</body>
+</html>
